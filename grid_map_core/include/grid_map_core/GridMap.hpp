@@ -353,6 +353,17 @@ class GridMap
    */
   bool move(const Position& position, std::vector<BufferRegion>& newRegions);
 
+    /*!
+   * \see bool move(const Position& position, std::vector<BufferRegion>& newRegions);
+   * new cells get initialized with value
+   * @param position the new location of the grid map in the map frame.
+   * @param newRegions the regions of the newly covered / previously uncovered regions of the buffer.
+   * @param value the value new cells get initialized with
+   * @return true if map has been moved, false otherwise.
+   */
+  bool move(const Position& position, std::vector<BufferRegion>& newRegions, float value);
+
+
   /*!
    * Move the grid map w.r.t. to the grid map frame. Use this to move the grid map
    * boundaries without moving the grid map data. Takes care of all the data handling,
@@ -361,6 +372,15 @@ class GridMap
    * @return true if map has been moved, false otherwise.
    */
   bool move(const Position& position);
+
+    /*!
+   * \see bool move(const Position& position), sets new cells to a value
+   * @param position the new location of the grid map in the map frame.
+   * @param value the value cells without data get initialized with
+   * @return true if map has been moved, false otherwise.
+   */
+  bool move(const Position& position, float value);
+
 
   /*!
    * Adds data from an other grid map to this grid map
@@ -400,6 +420,13 @@ class GridMap
    * Header information (geometry etc.) remains valid.
    */
   void clearAll();
+
+  /*!
+   * sets all cells of all layers to a value.
+   * If basic layers are used, clearBasic() is preferred as it is more efficient.
+   * Header information (geometry etc.) remains valid.
+   */
+  void clearAll(float value);
 
   /*!
    * Set the timestamp of the grid map.
@@ -488,11 +515,29 @@ class GridMap
   void clearCols(unsigned int index, unsigned int nCols);
 
   /*!
+   * Clear a number of columns of the grid map.
+   * @param index the left index for the columns to be reset.
+   * @param nCols the number of columns to reset.
+   * @param value the value new fields should be initialized with
+   */
+  void clearCols(unsigned int index, unsigned int nCols, float value);
+
+  /*!
    * Clear a number of rows of the grid map.
    * @param index the upper index for the rows to be reset.
    * @param nRows the number of rows to reset.
    */
   void clearRows(unsigned int index, unsigned int nRows);
+
+
+  /*!
+   * Clear a number of rows of the grid map.
+   * @param index the upper index for the rows to be reset.
+   * @param nRows the number of rows to reset.
+   * @param value the value new fields should be initialized with
+   */
+  void clearRows(unsigned int index, unsigned int nRows, float value);
+
 
   /*!
    * Get cell data at requested position, linearly interpolated from 2x2 cells.

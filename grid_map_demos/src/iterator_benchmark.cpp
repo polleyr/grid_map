@@ -24,9 +24,124 @@ void runGridMapIteratorVersion1(GridMap& map, const string& layer_from, const st
   for (GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
     const float value_from = map.at(layer_from, *iterator);
     float& value_to = map.at(layer_to, *iterator);
-    value_to = value_to > value_from ? value_to : value_from;
+    //value_to = value_to > value_from ? value_to : value_from;
+    if (value_to <= value_from){
+        map.at(layer_to, *iterator)=value_from;
+    }
+    
   }
 }
+
+void streetrunGridMapIteratorVersion1(GridMap& map, GridMap& streetMap, const string& layer_from, const string& layer_to)
+{
+  for (GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+      Position position;
+      map.getPosition(*iterator, position);
+      if(streetMap.isInside(position)){
+        map.at(layer_to, *iterator) = streetMap.atPosition(layer_from, position);
+      } else {
+        cout<<"error"<<endl;
+      }
+  }
+}
+
+
+/*!
+ * Improved efficiency by storing direct access to data layers.
+ */
+void streetrunGridMapIteratorVersion2(GridMap& map, GridMap& streetMap, const string& layer_from, const string& layer_to)
+{
+  const auto& data_from = streetMap[layer_from];
+  auto& data_to = map[layer_to];
+  for (GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+    const Index index(*iterator);
+    Position position;
+    map.getPosition(*iterator, position);
+     if(streetMap.isInside(position)){
+        Index streetIndex;
+        streetMap.getIndex(position, streetIndex);
+        const float value_from = data_from(streetIndex(0), streetIndex(1));
+        float& value_to = data_to(index(0), index(1));
+        value_to = value_from;
+      } else {
+        cout<<"error"<<endl;
+      }
+  }
+}
+
+/*!
+ * Improved efficiency by storing direct access to data layers.
+ */
+void streetrunGridMapIteratorVersion3(GridMap& map, GridMap& streetMap, const string& layer_from, const string& layer_to)
+{
+  const auto& data_from = streetMap[layer_from];
+  auto& data_to = map[layer_to];
+  for (GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+    const size_t index = iterator.getLinearIndex();
+    Position position;
+    map.getPosition(*iterator, position);
+     if(streetMap.isInside(position)){
+        Index streetIndex;
+        streetMap.getIndex(position, streetIndex);
+        const float value_from = data_from(streetIndex(0), streetIndex(1));
+        float& value_to = data_to(index);
+        value_to = value_from;
+      } else {
+        cout<<"error"<<endl;
+      }
+  }
+}
+
+/*!
+ * Improved efficiency by storing direct access to data layers.
+ */
+void streetrunGridMapIteratorVersion4(GridMap& map, GridMap& streetMap, const string& layer_from, const string& layer_to)
+{
+  const auto& data_from = streetMap[layer_from];
+  auto& data_to = map[layer_to];
+  Index zeroIndex(0, 0);
+  Position mapzeroposition;
+  map.getPosition(zeroIndex, mapzeroposition);
+  cout<<"mapzero position " << mapzeroposition(0) <<" "<< mapzeroposition(1)<<endl;
+  
+  
+  Index tfZeroIndex;
+  streetMap.getIndex(mapzeroposition, tfZeroIndex);
+  
+  cout<<tfZeroIndex(0) << " " << tfZeroIndex(1) << endl;
+
+  Index oneIndex(1, 1);
+  Position maponeposition;
+  map.getPosition(oneIndex, maponeposition);
+  cout<<"maponeposition position " << maponeposition(0) <<" "<< maponeposition(1)<<endl;
+  
+  Position maptoprightposition;
+  Index toprightindex(9, 9);
+  map.getPosition(toprightindex, maptoprightposition);
+  cout<<"maptopright position " << maptoprightposition(0) <<" "<< maptoprightposition(1)<<endl;
+
+  Index tfoneIndex(oneIndex(0)+tfZeroIndex(0), oneIndex(1)+tfZeroIndex(1));
+  Position tfmaponeposition;
+  streetMap.getPosition(tfoneIndex, tfmaponeposition);
+  cout<<"tf streetmaponeposition position " << tfmaponeposition(0) <<" "<< tfmaponeposition(1)<<endl;
+  
+  if (!(streetMap.isInside(mapzeroposition) and streetMap.isInside(maptoprightposition)))
+  {
+    cout<<"error"<<endl;
+  } else {
+  
+  
+  for (GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+    const Index index(*iterator);
+    Index streetIndex(index(0) + tfZeroIndex(0), index(1) + tfZeroIndex(1));
+    const float value_from = data_from(streetIndex(0), streetIndex(1));
+    float& value_to = data_to(index(0), index(1));
+    value_to = value_from;
+  }
+  }
+}
+
+
 
 /*!
  * Improved efficiency by storing direct access to data layers.
@@ -98,7 +213,7 @@ void runCustomLinearIndexIteration(GridMap& map, const string& layer_from, const
 int main(int argc, char* argv[])
 {
   GridMap map;
-  map.setGeometry(Length(20.0, 20.0), 0.004, Position(0.0, 0.0));
+  map.setGeometry(Length(51.2, 51.2), 0.01, Position(0.0, 20.0));
   map.add("random");
   map["random"].setRandom();
   map.add("layer1", 0.0);
@@ -108,12 +223,46 @@ int main(int argc, char* argv[])
   map.add("layer5", 0.0);
   map.add("layer6", 0.0);
 
+  GridMap streetMap;
+  streetMap.setGeometry(Length(1000.0, 1000.0), 0.1, Position(4.0, 4.0));
+  streetMap.add("random");
+  streetMap["random"].setRandom();
+  streetMap.add("layer1", 0.0);
+  streetMap.add("layer2", 0.0);
+  streetMap.add("layer3", 0.0);
+  streetMap.add("layer4", 0.0);
+  streetMap.add("layer5", 0.0);
+  streetMap.add("layer6", 0.0);
+
+  
   cout << "Results for iteration over " << map.getSize()(0) << " x " << map.getSize()(1) << " (" << map.getSize().prod() << ") grid cells." << endl;
   cout << "=========================================" << endl;
 
   clk::time_point t1 = clk::now();
-  runGridMapIteratorVersion1(map, "random", "layer1");
+  //streetrunGridMapIteratorVersion1(map, streetMap, "random", "layer1");
   clk::time_point t2 = clk::now();
+  cout << "Duration grid map iterator (convenient use): " << duration(t2 - t1) << " ms" << endl;
+
+  t1 = clk::now();
+  //streetrunGridMapIteratorVersion2(map, streetMap, "random", "layer2");
+  t2 = clk::now();
+  cout << "Duration grid map iterator (direct access to data layers): " << duration(t2 - t1) << " ms" << endl;
+
+  t1 = clk::now();
+  //streetrunGridMapIteratorVersion3(map, streetMap, "random", "layer3");
+  t2 = clk::now();
+  cout << "Duration grid map iterator (linear index): " << duration(t2 - t1) << " ms" << endl;
+
+  t1 = clk::now();
+  streetrunGridMapIteratorVersion4(map, streetMap, "random", "layer4");
+  t2 = clk::now();
+  cout << "Duration grid map iterator (direct access to data layers tfed index): " << duration(t2 - t1) << " ms" << endl;
+  
+  
+  
+  t1 = clk::now();
+  runGridMapIteratorVersion1(map, "random", "layer1");
+  t2 = clk::now();
   cout << "Duration grid map iterator (convenient use): " << duration(t2 - t1) << " ms" << endl;
 
   t1 = clk::now();
