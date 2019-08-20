@@ -76,10 +76,49 @@ void GridMap::setGeometry(const SubmapGeometry& geometry)
   setGeometry(geometry.getLength(), geometry.getResolution(), geometry.getPosition());
 }
 
+void GridMap::shrink(const Length& length, const Direction direction)
+{
+  Length delta(length_(0) - length(0), length_(1) - length(1));
+  Size size;
+  size(0) = static_cast<int>(round(length(0) / resolution_));
+  size(1) = static_cast<int>(round(length(1) / resolution_));
+  
+  int row_delta = size_(0) - size(0);
+  int col_delta = size_(1) - size(1);
+
+  for (auto& data : data_)
+  {
+    switch (direction)
+    {
+      case CENTERED:
+        data.second.block(0,0,size(0), size(1)) = data.second.block(row_delta / 2, col_delta / 2, size(0), size_(1)).eval();
+        break;
+      case NE:
+        std::cout << "NE shrink not implemented" <<std::endl;
+        break;
+      case NW:
+        std::cout << "NW shrink not implemented" <<std::endl;
+        break;
+      case SE:
+        std::cout << "SE shrink not implemented" <<std::endl;
+        break;
+      case SW:
+        std::cout << "SW shrink not implemented" <<std::endl;
+        break;
+      default:
+        break;
+    }
+  }
+  
+  size_ = size;
+  length_ = length;
+}
+
 void GridMap::grow(const Length& length, const Direction direction, float value)
 {
   if (length(0) < length_(0) || length(1) < length_(1))
   {
+    shrink(length, direction);
     return;
   }
 

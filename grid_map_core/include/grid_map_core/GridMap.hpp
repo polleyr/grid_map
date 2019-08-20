@@ -103,6 +103,14 @@ class GridMap
   void grow(const Length& length, const Direction direction=SE, float value=0.0);
 
   /*!
+   * Shrink the size of the gridmap.
+   * @param length the new side lengths in x, and y-direction of the grid map [m].
+   * @param direction the direction to grow in (default = CENTERED).
+   */
+  void shrink(const Length& length, const Direction direction=CENTERED);
+
+
+  /*!
    * Add a new empty data layer.
    * @param layer the name of the layer.
    * @value value the value to initialize the cells with.
