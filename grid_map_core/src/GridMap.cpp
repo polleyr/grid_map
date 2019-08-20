@@ -91,7 +91,7 @@ void GridMap::shrink(const Length& length, const Direction direction)
     switch (direction)
     {
       case CENTERED:
-        data.second.block(0,0,size(0), size(1)) = data.second.block(row_delta / 2, col_delta / 2, size(0), size_(1)).eval();
+        data.second = data.second.block(row_delta / 2, col_delta / 2, size(0), size(1)).eval();
         break;
       case NE:
         std::cout << "NE shrink not implemented" <<std::endl;
