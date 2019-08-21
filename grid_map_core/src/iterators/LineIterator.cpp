@@ -16,6 +16,8 @@ namespace grid_map {
 LineIterator::LineIterator(const grid_map::GridMap& gridMap, const Position& start,
                            const Position& end)
 {
+  iCell_ = 0;
+  nCells_ = 0;
   Index startIndex, endIndex;
   if (getIndexLimitedToMapRange(gridMap, start, end, startIndex)
       && getIndexLimitedToMapRange(gridMap, end, start, endIndex))
