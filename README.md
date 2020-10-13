@@ -22,7 +22,7 @@ The source code is released under a [BSD 3-Clause license](LICENSE).
 **Author: Péter Fankhauser<br />
 Affiliation: [ANYbotics](https://www.anybotics.com/)<br />
 Maintainer: Péter Fankhauser, pfankhauser@anybotics.com<br />**
-With contributions by: Tanja Baumann, Jeff Delmerico, Remo Diethelm, Perry Franklin, Dominic Jud, Ralph Kaestner, Philipp Krüsi, Alex Millane, Daniel Stonier, Elena Stumm, Martin Wermelinger, Christos Zalidis
+With contributions by: Tanja Baumann, Jeff Delmerico, Remo Diethelm, Perry Franklin, Dominic Jud, Ralph Kaestner, Philipp Krüsi, Alex Millane, Daniel Stonier, Elena Stumm, Martin Wermelinger, Christos Zalidis, Edo Jelavic, Ruben Grandia, Simone Arreghini, Magnus Gärtner
 
 This projected was initially developed at ETH Zurich (Autonomous Systems Lab & Robotic Systems Lab).
 
@@ -115,7 +115,7 @@ Additional conversion packages:
 * ***grid_map_costmap_2d*** provides conversions of grid maps from [costmap_2d] map types.
 * ***grid_map_cv*** provides conversions of grid maps from and to [OpenCV] image types.
 * ***grid_map_octomap*** provides conversions of grid maps from OctoMap ([OctoMap]) maps.
-* ***grid_map_pcl*** provides conversions of grid maps from Point Cloud Library ([PCL]) polygon meshes.
+* ***grid_map_pcl*** provides conversions of grid maps from Point Cloud Library ([PCL](http://pointclouds.org/)) polygon meshes and point clouds. For details, see the grid map pcl package [README](grid_map_pcl/README.md).
 
 ### Unit Tests
 
@@ -169,7 +169,24 @@ The *grid_map_demos* package contains several demonstration nodes. Use this code
 
     [![Filters demo results](grid_map_demos/doc/filters_demo_preview.gif)](grid_map_demos/doc/filters_demo.gif)
 
-For more information about grid map filters, see [grid_map_filters](#grid_map_filters).
+ For more information about grid map filters, see [grid_map_filters](#grid_map_filters).
+
+* *[interpolation_demo](grid_map_demos/src/InterpolationDemo.cpp)* shows the result of different interpolation methods on the resulting surface. The start the demo, use
+
+        roslaunch grid_map_demos interpolation_demo.launch
+
+<img src="grid_map_core/doc/interpolationSineWorld.gif" width="256" height="252">
+<img src="grid_map_core/doc/interpolationGaussWorld.gif" width="256" height="252">
+
+The user can play with different worlds (surfaces) and different interpolation settings in the [`interpolation_demo.yaml`](grid_map_demos/config/interpolation_demo.yaml) file. The visualization displays the ground truth in green and yellow color. The interpolation result is shown in red and purple colors. Also, the demo computes maximal and average interpolation errors, as well as the average time required for a single interpolation query.
+
+Grid map features four different interpolation methods (in order of increasing accuracy and increasing complexity):
+* **NN** - Nearest Neighbour (fastest, but least accurate).
+* **Linear** - Linear interpolation.
+* **Cubic convolution** - Piecewise cubic interpolation. Implemented using the cubic convolution algorithm.
+* **Cubic** - Cubic interpolation (slowest, but most accurate).
+
+For more details check the literature listed in  [`CubicInterpolation.hpp`](grid_map_core/include/grid_map_core/CubicInterpolation.hpp) file.
 
 ### Conventions & Definitions
 
@@ -374,7 +391,20 @@ Several basic filters are provided in the *grid_map_filters* package:
           input_layer: input
           output_layer: output
           radius: 0.06 # in m.
+* **`gridMapFilters/MedianFillFilter`**
 
+    Compute for each _NaN_ cell of a layer the median (of finites) inside a patch with radius. 
+    Optionally, apply median calculations for values that are already finite, the patch radius for these points is given by existing_value_radius. 
+
+        name: median
+        type: gridMapFilters/MedianFillFilter
+        params:
+          input_layer: input
+          output_layer: output
+          fill_hole_radius: 0.11 # in m. 
+          filter_existing_values: false # Default is false. If enabled it also does a median computation for existing values. 
+          existing_value_radius: 0.2 # in m. Note that this option only has an effect if filter_existing_values is set true. 
+    
 * **`gridMapFilters/NormalVectorsFilter`**
 
     Compute the normal vectors of a layer in a map.
